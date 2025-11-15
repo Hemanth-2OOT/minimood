@@ -118,11 +118,6 @@ textarea {
 #breathCard {
     display: none;
 }
-<div class="card">
-    <h3>Relaxing Music</h3>
-    <button class="btn" id="toggleMusic">Play Music 🎧</button>
-</div>
-
 .breathCircle {
     width: 150px;
     height: 150px;
@@ -164,6 +159,7 @@ canvas {
 }
 </style>
 </head>
+
 <body>
 
 <header>
@@ -332,10 +328,12 @@ document.getElementById("startBreath").onclick = ()=>{
         if(time <= 0) stopBreath();
     },1000);
 };
+
 function stopBreath(){
     clearInterval(breathingInterval);
     breathCard.style.display = "none";
 }
+
 document.getElementById("stopBreath").onclick = stopBreath;
 
 updateHistory();
