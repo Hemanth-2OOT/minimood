@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>MiniMood – Wellness Tracker</title>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+/* ===================================
+   GRADIENT WELLNESS THEME (OPTION B)
+   =================================== */
+
+:root {
+    --bg: linear-gradient(180deg, #a8c0ff 0%, #fbc2eb 100%);
+    --card: rgba(255,255,255,0.75);
+    --text: #2d2d2d;
+    --accent: #7b5cff;
+    --blur: blur(18px);
+}
+
+body {
+    margin: 0;
+    padding: 20px;
+    font-family: 'Poppins', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    backdrop-filter: var(--blur);
+}
+
+/* HEADER */
+header {
+    text-align: center;
+    margin-bottom: 20px;
+}
+header h1 {
+    margin: 0;
+    font-size: 26px;
+    color: #fff;
+    text-shadow: 0 1px 4px rgba(0,0,0,0.2);
+}
+header p {
+    margin: 6px 0 14px;
+    color: #ffffffd4;
+    font-size: 15px;
+}
+
+/* CARD STYLING */
+.card {
+    background: var(--card);
+    padding: 16px;
+    margin-bottom: 16px;
+    border-radius: 18px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+    backdrop-filter: blur(18px);
+}
+
+/* MOOD PICKER */
+.moods {
+    display: flex;
+    justify-content: space-between;
+    padding: 6px 10px;
+}
+.mood {
+    font-size: 38px;
+    width: 60px;
+    height: 60px;
+    background: rgba(255,255,255,0.6);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    border-radius: 14px;
+    cursor: pointer;
+    transition: transform 0.2s, background 0.3s;
+}
+.mood:hover {
+    transform: scale(1.15);
+    background: rgba(255,255,255,0.85);
+}
+.small {
+    font-size: 12px;
+    opacity: 0.7;
+}
+
+/* BUTTONS */
+.btn {
+    padding: 10px 14px;
+    border-radius: 14px;
+    border: none;
+    font-weight: 600;
+    font-size: 14px;
+    background: var(--accent);
+    color: #fff;
+    cursor: pointer;
+    width: 100%;
+    margin-top: 8px;
+    text-align: center;
+    transition: 0.2s;
+}
+.btn:hover {
+    opacity: 0.9;
+}
+
+/* JOURNAL */
+textarea {
+    width: 100%;
+    border-radius: 12px;
+    padding: 10px;
+    border: none;
+    background: rgba(255,255,255,0.6);
+    margin-top: 10px;
+    font-size: 14px;
+}
+
+/* BREATHING CIRCLE */
+#breathCard {
+    display: none;
+}
+<div class="card">
+    <h3>Relaxing Music</h3>
+    <button class="btn" id="toggleMusic">Play Music 🎧</button>
+</div>
+
+.breathCircle {
+    width: 150px;
+    height: 150px;
+    border-radius: 999px;
+    margin: 12px auto;
+    background: radial-gradient(circle, #ffffffaa, #ffffff55);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: transform 3s ease-in-out;
+}
+.breathText {
+    font-size: 20px;
+    font-weight: bold;
+}
+
+/* HISTORY LIST */
+.history-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 6px 2px;
+    border-bottom: 1px dashed rgba(0,0,0,0.1);
+    font-size: 14px;
+}
+
+/* FOOTER */
+footer {
+    text-align: center;
+    margin-top: 20px;
+    color: #fff;
+    font-size: 13px;
+    opacity: 0.85;
+}
+
+/* MOBILE FIX */
+canvas {
+    width: 100% !important;
+    height: 180px !important;
+}
+</style>
+</head>
+<body>
+
+<header>
+    <h1>MiniMood</h1>
+    <p>Track your emotions with calmness 🌈</p>
+</header>
+
+<!-- MOOD PICKER -->
+<div class="card">
+    <h3>How are you feeling?</h3>
+    <div class="moods">
+        <div class="mood" data-emoji="😄">😄<div class="small">Happy</div></div>
+        <div class="mood" data-emoji="🙂">🙂<div class="small">Okay</div></div>
+        <div class="mood" data-emoji="😐">😐<div class="small">Neutral</div></div>
+        <div class="mood" data-emoji="😟">😟<div class="small">Low</div></div>
+        <div class="mood" data-emoji="😣">😣<div class="small">Stressed</div></div>
+    </div>
+
+    <div id="tip-box" style="margin-top:10px; font-weight:600; opacity:0.8;">
+        Tap a mood to get started 💫
+    </div>
+
+    <button class="btn" id="startBreath">1-Minute Breathing</button>
+</div>
+
+<!-- BREATHING GUIDE -->
+<div class="card" id="breathCard">
+    <div class="breathCircle" id="breathCircle">
+        <div class="breathText" id="breathText">Ready</div>
+    </div>
+    <div style="text-align:center; margin-bottom:10px;">Time: <span id="breathTimer">60</span>s</div>
+    <button class="btn" id="stopBreath">Stop</button>
+</div>
+
+<!-- CHART -->
+<div class="card">
+    <h3>Your Mood Trend</h3>
+    <canvas id="moodChart"></canvas>
+</div>
+
+<!-- JOURNAL -->
+<div class="card">
+    <h3>Daily Journal</h3>
+    <textarea id="journalText" placeholder="Write a short note about your day..."></textarea>
+    <button class="btn" id="saveJournal">Save Note</button>
+    <div id="journalList" style="margin-top:10px; opacity:0.8;"></div>
+</div>
+
+<!-- MOOD HISTORY -->
+<div class="card">
+    <h3>Recent Entries</h3>
+    <div id="historyList">No logs yet.</div>
+</div>
+
+<footer>Made with calm energy ✨</footer>
+
+<script>
+/* =============== JS SAME AS BEFORE BUT CLEANED FOR UI =============== */
+const moodValues = {"😄":5,"🙂":4,"😐":3,"😟":2,"😣":1};
+let moodHistory = JSON.parse(localStorage.getItem("moodHistory")) || [];
+
+const tips = {
+  "😄": "Great mood! Keep shining ✨",
+  "🙂": "Good job! Maintain the positivity 💙",
+  "😐": "Neutral is okay. Try a deep breath 🌿",
+  "😟": "It's okay to feel low. Be kind to yourself 💛",
+  "😣": "Pause & breathe. You're strong 💜"
+};
+
+const tipBox = document.getElementById("tip-box");
+
+function saveMood(emoji){
+    const value = moodValues[emoji];
+    const date = new Date().toLocaleDateString();
+    moodHistory.push({emoji, value, date});
+    if(moodHistory.length > 7) moodHistory.shift();
+    localStorage.setItem("moodHistory", JSON.stringify(moodHistory));
+    updateHistory();
+    updateChart();
+}
+
+document.querySelectorAll(".mood").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+        const emoji = btn.dataset.emoji;
+        tipBox.textContent = tips[emoji];
+        saveMood(emoji);
+    });
+});
+
+function updateHistory(){
+    const area = document.getElementById("historyList");
+    if(moodHistory.length === 0){
+        area.textContent = "No logs yet.";
+        return;
+    }
+    area.innerHTML = "";
+    moodHistory.slice().reverse().forEach(m=>{
+        area.innerHTML += `<div class="history-item">
+            <span>${m.date}</span>
+            <span>${m.emoji}</span>
+        </div>`;
+    });
+}
+
+/* CHART */
+let ctx = document.getElementById("moodChart").getContext("2d");
+let moodChart = new Chart(ctx,{
+    type:"line",
+    data:{
+        labels: moodHistory.map(m=>m.date),
+        datasets:[{
+            data: moodHistory.map(m=>m.value),
+            borderWidth:3,
+            borderColor:"#7b5cff",
+            tension:0.4
+        }]
+    },
+    options:{scales:{y:{min:1,max:5}}}
+});
+
+function updateChart(){
+    moodChart.data.labels = moodHistory.map(m=>m.date);
+    moodChart.data.datasets[0].data = moodHistory.map(m=>m.value);
+    moodChart.update();
+}
+
+/* JOURNAL */
+let journal = JSON.parse(localStorage.getItem("journal")) || [];
+document.getElementById("saveJournal").onclick = ()=>{
+    const text = document.getElementById("journalText").value.trim();
+    if(!text) return;
+    journal.push(text);
+    if(journal.length > 3) journal.shift();
+    localStorage.setItem("journal", JSON.stringify(journal));
+    renderJournal();
+    document.getElementById("journalText").value = "";
+};
+
+function renderJournal(){
+    const area = document.getElementById("journalList");
+    area.innerHTML = journal.map(j=>`<div>• ${j}</div>`).join("");
+}
+renderJournal();
+
+/* BREATHING */
+const breathCard = document.getElementById("breathCard");
+const breathCircle = document.getElementById("breathCircle");
+const breathText = document.getElementById("breathText");
+const breathTimer = document.getElementById("breathTimer");
+let breathingInterval;
+
+document.getElementById("startBreath").onclick = ()=>{
+    breathCard.style.display = "block";
+    let time = 60;
+    breathTimer.textContent = time;
+    breathingInterval = setInterval(()=>{
+        time--;
+        breathTimer.textContent = time;
+        if(time % 8 < 4){
+            breathText.textContent = "Inhale";
+            breathCircle.style.transform = "scale(1.2)";
+        } else {
+            breathText.textContent = "Exhale";
+            breathCircle.style.transform = "scale(0.9)";
+        }
+        if(time <= 0) stopBreath();
+    },1000);
+};
+function stopBreath(){
+    clearInterval(breathingInterval);
+    breathCard.style.display = "none";
+}
+document.getElementById("stopBreath").onclick = stopBreath;
+
+updateHistory();
+updateChart();
+</script>
+
+</body>
+</html>
